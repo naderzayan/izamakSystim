@@ -6,6 +6,8 @@ import { MdDelete } from "react-icons/md";
 
 export default function MainPartyData() {
     const [parties, setParties] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
     useEffect(() => {
         const storedParties = JSON.parse(localStorage.getItem("parties")) || [];
@@ -16,6 +18,26 @@ export default function MainPartyData() {
         const updatedParties = parties.filter((_, i) => i !== index);
         setParties(updatedParties);
         localStorage.setItem("parties", JSON.stringify(updatedParties));
+    };
+
+    // حساب عدد الصفحات
+    const totalPages = Math.ceil(parties.length / itemsPerPage);
+
+    // تحديد بداية ونهاية البيانات في الصفحة الحالية
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const currentParties = parties.slice(startIndex, endIndex);
+
+    const goToNextPage = () => {
+        if (currentPage < totalPages) {
+            setCurrentPage(currentPage + 1);
+        }
+    };
+
+    const goToPrevPage = () => {
+        if (currentPage > 1) {
+            setCurrentPage(currentPage - 1);
+        }
     };
 
     return (
@@ -43,15 +65,19 @@ export default function MainPartyData() {
                     </tr>
                 </thead>
                 <tbody>
-                    {parties.length > 0 ? (
-                        parties.map((party, index) => (
-                            <tr key={index}>
+                    {currentParties.length > 0 ? (
+                        currentParties.map((party, index) => (
+                            <tr key={startIndex + index}>
                                 <td>{party.name}</td>
                                 <td>{party.date}</td>
                                 <td>{party.place}</td>
                                 <td>
-                                    <button className="editBtn"><Link to='/AddInvitors'><BsDatabaseAdd /></Link></button>
-                                    <button className="deleteBtn" onClick={() => handleDelete(index)}>
+                                    <button className="editBtn">
+                                        <Link to="/AddInvitors">
+                                            <BsDatabaseAdd />
+                                        </Link>
+                                    </button>
+                                    <button className="deleteBtn" onClick={() => handleDelete(startIndex + index)}>
                                         <MdDelete />
                                     </button>
                                 </td>
@@ -68,9 +94,15 @@ export default function MainPartyData() {
             </table>
 
             <div className="pages">
-                <button className="prev">Next</button>
-                <span>1</span>
-                <button className="next">Prev</button>
+                <button className="prev" onClick={goToPrevPage} disabled={currentPage === 1}>
+                    السابقة
+                </button>
+                <span>
+                    {currentPage} / {totalPages || 1}
+                </span>
+                <button className="next" onClick={goToNextPage} disabled={currentPage === totalPages || totalPages === 0}>
+                    التالية
+                </button>
             </div>
         </main>
     );
