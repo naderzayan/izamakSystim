@@ -71,6 +71,21 @@
     text-align: center;
     padding: 2rem;
   }
+  .editBtn {
+    background: none;
+    border: none;
+    svg {
+      color: #000;
+      font-size: 25px;
+    }
+  }
+  .deleteBtn {
+    background: none;
+    border: none;
+    svg {
+      font-size: 25px;
+    }
+  }
 }
 
 .pages {
@@ -88,3 +103,4 @@
     border-radius: 5px;
   }
 }
+
