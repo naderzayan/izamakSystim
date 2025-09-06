@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../style/_addInvitors.scss";
 
 export default function AddInvitors() {
@@ -7,8 +7,14 @@ export default function AddInvitors() {
     const [phone, setPhone] = useState("");
     const [invites, setInvites] = useState("");
 
+    useEffect(() => {
+        const storedGuests = JSON.parse(localStorage.getItem("guests")) || [];
+        setGuests(storedGuests);
+    }, []);
+
     const handleAddGuest = () => {
         if (!name || !phone || !invites) return;
+
         const newGuest = {
             id: guests.length + 1,
             name,
@@ -16,7 +22,12 @@ export default function AddInvitors() {
             invites,
             status: "invited",
         };
-        setGuests([...guests, newGuest]);
+
+        const updatedGuests = [...guests, newGuest];
+        setGuests(updatedGuests);
+
+        localStorage.setItem("guests", JSON.stringify(updatedGuests));
+
         setName("");
         setPhone("");
         setInvites("");
@@ -60,6 +71,7 @@ export default function AddInvitors() {
 
                 <div className="addButton">
                     <button onClick={handleAddGuest}>إضافة</button>
+                    <button>رفع ملف</button>
                 </div>
             </div>
         </main>
