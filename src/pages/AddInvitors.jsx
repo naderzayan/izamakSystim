@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "../style/_addInvitors.scss";
+import { TiDeleteOutline } from "react-icons/ti";
+import { MdDeleteForever } from "react-icons/md";
 
 export default function AddInvitors() {
     const [guests, setGuests] = useState([]);
@@ -7,16 +9,18 @@ export default function AddInvitors() {
     const [phone, setPhone] = useState("");
     const [invites, setInvites] = useState("");
 
+    // تحميل البيانات من LocalStorage عند فتح الصفحة
     useEffect(() => {
         const storedGuests = JSON.parse(localStorage.getItem("guests")) || [];
         setGuests(storedGuests);
     }, []);
 
+    // إضافة مدعو جديد
     const handleAddGuest = () => {
         if (!name || !phone || !invites) return;
 
         const newGuest = {
-            id: guests.length + 1,
+            id: Date.now(), // معرف فريد
             name,
             phone,
             invites,
@@ -25,7 +29,6 @@ export default function AddInvitors() {
 
         const updatedGuests = [...guests, newGuest];
         setGuests(updatedGuests);
-
         localStorage.setItem("guests", JSON.stringify(updatedGuests));
 
         setName("");
@@ -33,18 +36,40 @@ export default function AddInvitors() {
         setInvites("");
     };
 
+    // حذف مدعو واحد
+    const handleDeleteGuest = (id) => {
+        const updatedGuests = guests.filter((guest) => guest.id !== id);
+        setGuests(updatedGuests);
+        localStorage.setItem("guests", JSON.stringify(updatedGuests));
+    };
+
+    // مسح كل المدعوين
+    const handleClearAll = () => {
+        setGuests([]);
+        localStorage.removeItem("guests");
+    };
+
     return (
         <main className="mainOfAddInvitors">
             <div className="sideBar">
                 <h1>قائمة المدعوين</h1>
+                {guests.length > 0 && (
+                    <button className="clearAllBtn" onClick={handleClearAll}>
+                        مسح الكل <TiDeleteOutline />
+                    </button>
+                )}
                 <ul>
                     {guests.length === 0 ? (
                         <p>لا يوجد مدعوون بعد</p>
                     ) : (
                         guests.map((guest) => (
                             <li key={guest.id}>
-                                <span>{` - ${guest.name}`}</span>
-                                <span>{guest.status}</span>
+                                <span>
+                                   - {guest.name}  {guest.status}
+                                </span>
+                                <button className="deleteBtn" onClick={() => handleDeleteGuest(guest.id)}>
+                                    <MdDeleteForever />
+                                </button>
                             </li>
                         ))
                     )}
@@ -71,7 +96,6 @@ export default function AddInvitors() {
 
                 <div className="addButton">
                     <button onClick={handleAddGuest}>إضافة</button>
-                    <button>رفع ملف</button>
                 </div>
             </div>
         </main>
