@@ -6,27 +6,36 @@ import { MdDelete } from "react-icons/md";
 
 export default function MainPartyData() {
     const [parties, setParties] = useState([]);
+    const [filteredParties, setFilteredParties] = useState([]);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [searchPerformed, setSearchPerformed] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
     useEffect(() => {
         const storedParties = JSON.parse(localStorage.getItem("parties")) || [];
         setParties(storedParties);
+        setFilteredParties(storedParties);
     }, []);
 
     const handleDelete = (index) => {
         const updatedParties = parties.filter((_, i) => i !== index);
         setParties(updatedParties);
+        setFilteredParties(updatedParties);
         localStorage.setItem("parties", JSON.stringify(updatedParties));
     };
 
-    // حساب عدد الصفحات
-    const totalPages = Math.ceil(parties.length / itemsPerPage);
+    const handleSearch = () => {
+        setSearchPerformed(true);
+        const result = parties.filter((party) => party.name.toLowerCase().includes(searchTerm.toLowerCase()));
+        setFilteredParties(result);
+        setCurrentPage(1);
+    };
 
-    // تحديد بداية ونهاية البيانات في الصفحة الحالية
+    const totalPages = Math.ceil(filteredParties.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
-    const currentParties = parties.slice(startIndex, endIndex);
+    const currentParties = filteredParties.slice(startIndex, endIndex);
 
     const goToNextPage = () => {
         if (currentPage < totalPages) {
@@ -50,8 +59,10 @@ export default function MainPartyData() {
                     <img src="logo.svg" alt="" />
                 </div>
                 <div className="search">
-                    <input type="search" placeholder="ادخل اسم الحفلة" />
-                    <button className="searchBtn">بحث</button>
+                    <input type="search" placeholder="ادخل اسم الحفلة" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                    <button className="searchBtn" onClick={handleSearch}>
+                        بحث
+                    </button>
                 </div>
             </div>
 
@@ -83,6 +94,12 @@ export default function MainPartyData() {
                                 </td>
                             </tr>
                         ))
+                    ) : searchPerformed ? (
+                        <tr>
+                            <td colSpan="4" className="empty">
+                                لا توجد نتائج مطابقة
+                            </td>
+                        </tr>
                     ) : (
                         <tr>
                             <td colSpan="4" className="empty">
