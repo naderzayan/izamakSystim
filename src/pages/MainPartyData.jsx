@@ -10,6 +10,8 @@ export default function MainPartyData() {
     const [searchTerm, setSearchTerm] = useState("");
     const [searchPerformed, setSearchPerformed] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
+    const [showModal, setShowModal] = useState(false);
+    const [deleteIndex, setDeleteIndex] = useState(null);
     const itemsPerPage = 10;
 
     useEffect(() => {
@@ -18,11 +20,23 @@ export default function MainPartyData() {
         setFilteredParties(storedParties);
     }, []);
 
-    const handleDelete = (index) => {
-        const updatedParties = parties.filter((_, i) => i !== index);
+    const confirmDelete = (index) => {
+        setDeleteIndex(index);
+        setShowModal(true);
+    };
+
+    const handleDelete = () => {
+        if (deleteIndex === null) return;
+
+        const updatedParties = parties.filter((_, i) => i !== deleteIndex);
         setParties(updatedParties);
-        setFilteredParties(updatedParties);
+
+        const updatedFiltered = filteredParties.filter((_, i) => i !== deleteIndex);
+        setFilteredParties(updatedFiltered);
+
         localStorage.setItem("parties", JSON.stringify(updatedParties));
+        setShowModal(false);
+        setDeleteIndex(null);
     };
 
     const handleSearch = () => {
@@ -88,7 +102,7 @@ export default function MainPartyData() {
                                             <BsDatabaseAdd />
                                         </Link>
                                     </button>
-                                    <button className="deleteBtn" onClick={() => handleDelete(startIndex + index)}>
+                                    <button className="deleteBtn" onClick={() => confirmDelete(startIndex + index)}>
                                         <MdDelete />
                                     </button>
                                 </td>
@@ -121,6 +135,22 @@ export default function MainPartyData() {
                     التالية
                 </button>
             </div>
+
+            {showModal && (
+                <div className="modalOverlay">
+                    <div className="modal">
+                        <h3>هل متأكد من الحذف؟</h3>
+                        <div className="modalActions">
+                            <button className="confirmBtn" onClick={handleDelete}>
+                                نعم
+                            </button>
+                            <button className="cancelBtn" onClick={() => setShowModal(false)}>
+                                لا
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </main>
     );
 }

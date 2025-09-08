@@ -9,18 +9,16 @@ export default function AddInvitors() {
     const [phone, setPhone] = useState("");
     const [invites, setInvites] = useState("");
 
-    // تحميل البيانات من LocalStorage عند فتح الصفحة
     useEffect(() => {
         const storedGuests = JSON.parse(localStorage.getItem("guests")) || [];
         setGuests(storedGuests);
     }, []);
 
-    // إضافة مدعو جديد
     const handleAddGuest = () => {
         if (!name || !phone || !invites) return;
 
         const newGuest = {
-            id: Date.now(), // معرف فريد
+            id: Date.now(),
             name,
             phone,
             invites,
