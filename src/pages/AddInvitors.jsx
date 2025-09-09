@@ -63,7 +63,10 @@ export default function AddInvitors() {
                         guests.map((guest) => (
                             <li key={guest.id}>
                                 <span>
-                                   - {guest.name}  {guest.status}
+                                   - {guest.name}  
+                                </span>
+                                <span>
+                                    {guest.status}
                                 </span>
                                 {/* <button className="deleteBtn" onClick={() => handleDeleteGuest(guest.id)}>
                                     <MdDeleteForever />
