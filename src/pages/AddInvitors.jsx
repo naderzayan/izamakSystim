@@ -35,27 +35,27 @@ export default function AddInvitors() {
     };
 
     // حذف مدعو واحد
-    const handleDeleteGuest = (id) => {
-        const updatedGuests = guests.filter((guest) => guest.id !== id);
-        setGuests(updatedGuests);
-        localStorage.setItem("guests", JSON.stringify(updatedGuests));
-    };
+    // const handleDeleteGuest = (id) => {
+    //     const updatedGuests = guests.filter((guest) => guest.id !== id);
+    //     setGuests(updatedGuests);
+    //     localStorage.setItem("guests", JSON.stringify(updatedGuests));
+    // };
 
     // مسح كل المدعوين
-    const handleClearAll = () => {
-        setGuests([]);
-        localStorage.removeItem("guests");
-    };
+    // const handleClearAll = () => {
+    //     setGuests([]);
+    //     localStorage.removeItem("guests");
+    // };
 
     return (
         <main className="mainOfAddInvitors">
             <div className="sideBar">
                 <h1>قائمة المدعوين</h1>
-                {guests.length > 0 && (
+                {/* {guests.length > 0 && (
                     <button className="clearAllBtn" onClick={handleClearAll}>
                         مسح الكل <TiDeleteOutline />
                     </button>
-                )}
+                )} */}
                 <ul>
                     {guests.length === 0 ? (
                         <p>لا يوجد مدعوون بعد</p>
@@ -65,9 +65,9 @@ export default function AddInvitors() {
                                 <span>
                                    - {guest.name}  {guest.status}
                                 </span>
-                                <button className="deleteBtn" onClick={() => handleDeleteGuest(guest.id)}>
+                                {/* <button className="deleteBtn" onClick={() => handleDeleteGuest(guest.id)}>
                                     <MdDeleteForever />
-                                </button>
+                                </button> */}
                             </li>
                         ))
                     )}
