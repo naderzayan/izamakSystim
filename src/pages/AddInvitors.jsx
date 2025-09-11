@@ -2,16 +2,16 @@ import React, { useState, useEffect } from "react";
 import "../style/_addInvitors.scss";
 import { TiDeleteOutline } from "react-icons/ti";
 import { MdDeleteForever } from "react-icons/md";
-
+import { useLocation } from "react-router-dom";
 export default function AddInvitors() {
     const [guests, setGuests] = useState([]);
     const [name, setName] = useState("");
     const [phone, setPhone] = useState("");
     const [invites, setInvites] = useState("");
-
-    useEffect(() => {
-        const storedGuests = JSON.parse(localStorage.getItem("guests")) || [];
-        setGuests(storedGuests);
+const location = useLocation();
+const currentParty = location.state?.party;
+    useEffect(() => {        
+        setGuests(currentParty.members)
     }, []);
 
     const handleAddGuest = () => {

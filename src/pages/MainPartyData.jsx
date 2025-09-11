@@ -15,10 +15,24 @@ export default function MainPartyData() {
     const itemsPerPage = 10;
 
     useEffect(() => {
-        const storedParties = JSON.parse(localStorage.getItem("parties")) || [];
-        setParties(storedParties);
-        setFilteredParties(storedParties);
+        fetch("https://www.izemak.com/azimak/public/api/parties")
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error("Network response was not ok");
+                }
+
+                return response.json();
+            })
+            .then((data) => {
+                setParties(data.data);
+                console.log("response", data.data);
+
+                setFilteredParties(data.data);
+            })
+            .catch((error) => console.error("Fetch error:", error));
     }, []);
+
+ 
 
     const confirmDelete = (index) => {
         setDeleteIndex(index);
@@ -83,6 +97,7 @@ export default function MainPartyData() {
             <table className="partyTable">
                 <thead>
                     <tr>
+                        <th>الرقم</th>
                         <th>اسم الحفلة</th>
                         <th>ميعاد الحفلة</th>
                         <th>عنوان الحفلة</th>
@@ -93,12 +108,13 @@ export default function MainPartyData() {
                     {currentParties.length > 0 ? (
                         currentParties.map((party, index) => (
                             <tr key={startIndex + index}>
+                                <td>{party.id}</td>
                                 <td>{party.name}</td>
-                                <td>{party.date}</td>
-                                <td>{party.place}</td>
+                                <td>{party.time}</td>
+                                <td>{party.address}</td>
                                 <td>
                                     <button className="editBtn">
-                                        <Link to="/AddInvitors">
+                                        <Link to="/AddInvitors" state={{ party: currentParties[index] }}>
                                             <BsDatabaseAdd />
                                         </Link>
                                     </button>
