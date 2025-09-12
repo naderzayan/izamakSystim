@@ -7,22 +7,35 @@ export default function CreateNewParty() {
     const [partyName, setPartyName] = useState("");
     const [partyDate, setPartyDate] = useState("");
     const [partyPlace, setPartyPlace] = useState("");
-
-    const handleSubmit = (e) => {
+    const [invitation, setInvitation] = useState("");
+    const [invitationText, setInvitationText] = useState("");
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         const newParty = {
             name: partyName,
-            date: partyDate,
-            place: partyPlace,
+            address: partyPlace,
+            location: "",
+            time: partyDate,
+            invititon: null,
+            partyInvitationText: invitationText,
+            party_condition: invitation,
         };
-
-        const existingParties = JSON.parse(localStorage.getItem("parties")) || [];
-        existingParties.push(newParty);
-
-        localStorage.setItem("parties", JSON.stringify(existingParties));
-
-        navigate("/mainpartydata");
+        try {
+            const response = await fetch("https://www.izemak.com/azimak/public/api/addparty", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(newParty),
+            });
+            if (!response.ok) {
+                throw new Error("Failed to save guest");                
+            }
+            navigate("/mainpartydata");
+        } catch (error) {
+            console.error("Error saving guest:", error);
+        }
     };
 
     return (
@@ -31,13 +44,13 @@ export default function CreateNewParty() {
 
             <form className="formContainer" onSubmit={handleSubmit}>
                 <div className="dataOfNewParty">
-                    <select name="" id="">
-                        <option value="">ارسال الدعوة فقط</option>
-                        <option value="">ارسال الدعوة مع السؤال</option>
-                        <option value="">ارسال الدعوة ورمز الدخول مع السؤال</option>
-                        <option value="">ارسال الدعوة مع رمز الدخول بدون سؤال</option>
-                        <option value="">ارسال الموقع</option>
-                        <option value="">ارسال رمز الدخول فقط</option>
+                    <select name="" id="" value={invitation} onChange={(e) => setInvitation(e.target.value)}>
+                        <option value="invitation">ارسال الدعوة فقط</option>
+                        <option value="invitationWithQuestion">ارسال الدعوة مع السؤال</option>
+                        <option value="both">ارسال الدعوة ورمز الدخول مع السؤال</option>
+                        <option value="bothwithoutQuestion">ارسال الدعوة مع رمز الدخول بدون سؤال</option>
+                        <option value="location">ارسال الموقع</option>
+                        <option value="qr">ارسال رمز الدخول فقط</option>
                     </select>
                 </div>
                 <div className="dataOfNewParty">
@@ -56,7 +69,7 @@ export default function CreateNewParty() {
                 </div>
                 <div className="dataOfNewParty">
                     <label>ادخل نص الدعوة</label>
-                    <input type="text" placeholder="ادخل نص الدعوة" />
+                    <input type="text" placeholder="ادخل نص الدعوة" value={invitationText} onChange={(e) => setInvitationText(e.target.value)} />
                 </div>
 
                 <div className="dataOfNewParty">

@@ -1,76 +1,60 @@
 import React, { useState, useEffect } from "react";
 import "../style/_addInvitors.scss";
-import { TiDeleteOutline } from "react-icons/ti";
-import { MdDeleteForever } from "react-icons/md";
-
+import { useLocation } from "react-router-dom";
 export default function AddInvitors() {
     const [guests, setGuests] = useState([]);
     const [name, setName] = useState("");
     const [phone, setPhone] = useState("");
     const [invites, setInvites] = useState("");
-
+    const location = useLocation();
+    const currentParty = location.state?.party;
     useEffect(() => {
-        const storedGuests = JSON.parse(localStorage.getItem("guests")) || [];
-        setGuests(storedGuests);
+        setGuests(currentParty.members);
     }, []);
 
-    const handleAddGuest = () => {
+    const handleAddGuest = async () => {
         if (!name || !phone || !invites) return;
 
         const newGuest = {
-            id: Date.now(),
-            name,
-            phone,
-            invites,
-            status: "invited",
+            Party_id: currentParty.id,
+            name: name,
+            phoneNumber: phone,
+            maxScan: invites,
         };
 
-        const updatedGuests = [...guests, newGuest];
-        setGuests(updatedGuests);
-        localStorage.setItem("guests", JSON.stringify(updatedGuests));
-
-        setName("");
-        setPhone("");
-        setInvites("");
+        try {
+            const response = await fetch("https://www.izemak.com/azimak/public/api/addinvitor", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(newGuest),
+            });
+            if (!response.ok) {
+                throw new Error("Failed to save guest");
+            }
+            setName("");
+            setPhone("");
+            setInvites("");
+            currentParty.members.push(newGuest);
+            setGuests(currentParty.members);
+        } catch (error) {
+            console.error("Error saving guest:", error);
+        }
     };
-
-    // حذف مدعو واحد
-    // const handleDeleteGuest = (id) => {
-    //     const updatedGuests = guests.filter((guest) => guest.id !== id);
-    //     setGuests(updatedGuests);
-    //     localStorage.setItem("guests", JSON.stringify(updatedGuests));
-    // };
-
-    // مسح كل المدعوين
-    // const handleClearAll = () => {
-    //     setGuests([]);
-    //     localStorage.removeItem("guests");
-    // };
 
     return (
         <main className="mainOfAddInvitors">
             <div className="sideBar">
                 <h1>قائمة المدعوين</h1>
-                {/* {guests.length > 0 && (
-                    <button className="clearAllBtn" onClick={handleClearAll}>
-                        مسح الكل <TiDeleteOutline />
-                    </button>
-                )} */}
                 <ul>
                     {guests.length === 0 ? (
                         <p>لا يوجد مدعوون بعد</p>
                     ) : (
                         guests.map((guest) => (
                             <li key={guest.id}>
-                                <span>
-                                   - {guest.name}  
-                                </span>
-                                <span>
-                                    {guest.status}
-                                </span>
-                                {/* <button className="deleteBtn" onClick={() => handleDeleteGuest(guest.id)}>
-                                    <MdDeleteForever />
-                                </button> */}
+                                <span>{guest.name}</span>
+                                <span>{guest.status}</span>
                             </li>
                         ))
                     )}
