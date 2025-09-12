@@ -6,33 +6,31 @@ import { MdDelete } from "react-icons/md";
 
 export default function MainPartyData() {
     const [parties, setParties] = useState([]);
-    const [filteredParties, setFilteredParties] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [searchPerformed, setSearchPerformed] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
+    const [lastPage, setLastPage] = useState(1);
     const [showModal, setShowModal] = useState(false);
     const [deleteIndex, setDeleteIndex] = useState(null);
-    const itemsPerPage = 10;
 
-    useEffect(() => {
-        fetch("https://www.izemak.com/azimak/public/api/parties")
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error("Network response was not ok");
-                }
+    const baseUrl = "https://www.izemak.com/azimak/public/api/parties";
 
-                return response.json();
-            })
+    const fetchParties = (page = 1) => {
+        fetch(`${baseUrl}?page=${page}`, {
+            headers: { Accept: "application/json" },
+        })
+            .then((response) => response.json())
             .then((data) => {
                 setParties(data.data);
-                console.log("response", data.data);
-
-                setFilteredParties(data.data);
+                setLastPage(data.meta?.last_page || 1);
+                console.log("response", data);
             })
             .catch((error) => console.error("Fetch error:", error));
-    }, []);
+    };
 
- 
+    useEffect(() => {
+        fetchParties(currentPage);
+    }, [currentPage]);
 
     const confirmDelete = (index) => {
         setDeleteIndex(index);
@@ -41,39 +39,31 @@ export default function MainPartyData() {
 
     const handleDelete = () => {
         if (deleteIndex === null) return;
-
         const updatedParties = parties.filter((_, i) => i !== deleteIndex);
         setParties(updatedParties);
-
-        const updatedFiltered = filteredParties.filter((_, i) => i !== deleteIndex);
-        setFilteredParties(updatedFiltered);
-
-        localStorage.setItem("parties", JSON.stringify(updatedParties));
         setShowModal(false);
         setDeleteIndex(null);
     };
 
     const handleSearch = () => {
         setSearchPerformed(true);
+        if (!searchTerm) {
+            fetchParties(currentPage);
+            return;
+        }
         const result = parties.filter((party) => party.name.toLowerCase().includes(searchTerm.toLowerCase()));
-        setFilteredParties(result);
-        setCurrentPage(1);
+        setParties(result);
     };
 
-    const totalPages = Math.ceil(filteredParties.length / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const currentParties = filteredParties.slice(startIndex, endIndex);
-
     const goToNextPage = () => {
-        if (currentPage < totalPages) {
-            setCurrentPage(currentPage + 1);
+        if (currentPage < lastPage) {
+            setCurrentPage((prev) => prev + 1);
         }
     };
 
     const goToPrevPage = () => {
         if (currentPage > 1) {
-            setCurrentPage(currentPage - 1);
+            setCurrentPage((prev) => prev - 1);
         }
     };
 
@@ -97,28 +87,26 @@ export default function MainPartyData() {
             <table className="partyTable">
                 <thead>
                     <tr>
-                        <th>الرقم</th>
                         <th>اسم الحفلة</th>
                         <th>ميعاد الحفلة</th>
                         <th>عنوان الحفلة</th>
-                        <th>تعديل وحذف</th>
+                        <th>اضافة مدعويين وحذف الحفلة</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {currentParties.length > 0 ? (
-                        currentParties.map((party, index) => (
-                            <tr key={startIndex + index}>
-                                <td>{party.id}</td>
+                    {parties.length > 0 ? (
+                        parties.map((party, index) => (
+                            <tr key={index}>
                                 <td>{party.name}</td>
                                 <td>{party.time}</td>
                                 <td>{party.address}</td>
                                 <td>
                                     <button className="editBtn">
-                                        <Link to="/AddInvitors" state={{ party: currentParties[index] }}>
+                                        <Link to="/AddInvitors" state={{ party }}>
                                             <BsDatabaseAdd />
                                         </Link>
                                     </button>
-                                    <button className="deleteBtn" onClick={() => confirmDelete(startIndex + index)}>
+                                    <button className="deleteBtn" onClick={() => confirmDelete(index)}>
                                         <MdDelete />
                                     </button>
                                 </td>
@@ -145,9 +133,9 @@ export default function MainPartyData() {
                     السابقة
                 </button>
                 <span>
-                    {currentPage} / {totalPages || 1}
+                    {currentPage} / {lastPage}
                 </span>
-                <button className="next" onClick={goToNextPage} disabled={currentPage === totalPages || totalPages === 0}>
+                <button className="next" onClick={goToNextPage} disabled={currentPage === lastPage}>
                     التالية
                 </button>
             </div>

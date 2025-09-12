@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
 import "../style/_addInvitors.scss";
-import { TiDeleteOutline } from "react-icons/ti";
-import { MdDeleteForever } from "react-icons/md";
 import { useLocation } from "react-router-dom";
 export default function AddInvitors() {
     const [guests, setGuests] = useState([]);
@@ -34,28 +32,10 @@ const currentParty = location.state?.party;
         setInvites("");
     };
 
-    // حذف مدعو واحد
-    // const handleDeleteGuest = (id) => {
-    //     const updatedGuests = guests.filter((guest) => guest.id !== id);
-    //     setGuests(updatedGuests);
-    //     localStorage.setItem("guests", JSON.stringify(updatedGuests));
-    // };
-
-    // مسح كل المدعوين
-    // const handleClearAll = () => {
-    //     setGuests([]);
-    //     localStorage.removeItem("guests");
-    // };
-
     return (
         <main className="mainOfAddInvitors">
             <div className="sideBar">
                 <h1>قائمة المدعوين</h1>
-                {/* {guests.length > 0 && (
-                    <button className="clearAllBtn" onClick={handleClearAll}>
-                        مسح الكل <TiDeleteOutline />
-                    </button>
-                )} */}
                 <ul>
                     {guests.length === 0 ? (
                         <p>لا يوجد مدعوون بعد</p>
@@ -63,14 +43,11 @@ const currentParty = location.state?.party;
                         guests.map((guest) => (
                             <li key={guest.id}>
                                 <span>
-                                   - {guest.name}  
+                                    {guest.name}  
                                 </span>
                                 <span>
                                     {guest.status}
                                 </span>
-                                {/* <button className="deleteBtn" onClick={() => handleDeleteGuest(guest.id)}>
-                                    <MdDeleteForever />
-                                </button> */}
                             </li>
                         ))
                     )}
