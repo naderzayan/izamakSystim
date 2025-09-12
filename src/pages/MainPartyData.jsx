@@ -44,6 +44,12 @@ export default function MainPartyData() {
 
     const handleDelete = () => {
         if (deleteIndex === null) return;
+        const deleteUrl = "https://www.izemak.com/azimak/public/api/deleteparty/" + parties[deleteIndex].id;
+        fetch(deleteUrl, {
+            method: "DELETE",
+            headers: { Accept: "application/json" },
+        });
+
         const updatedParties = parties.filter((_, i) => i !== deleteIndex);
         setParties(updatedParties);
         setShowModal(false);
