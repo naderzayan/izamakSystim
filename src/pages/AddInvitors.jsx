@@ -6,30 +6,41 @@ export default function AddInvitors() {
     const [name, setName] = useState("");
     const [phone, setPhone] = useState("");
     const [invites, setInvites] = useState("");
-const location = useLocation();
-const currentParty = location.state?.party;
-    useEffect(() => {        
-        setGuests(currentParty.members)
+    const location = useLocation();
+    const currentParty = location.state?.party;
+    useEffect(() => {
+        setGuests(currentParty.members);
     }, []);
 
-    const handleAddGuest = () => {
+    const handleAddGuest = async () => {
         if (!name || !phone || !invites) return;
 
         const newGuest = {
-            id: Date.now(),
-            name,
-            phone,
-            invites,
-            status: "invited",
+            Party_id: currentParty.id,
+            name: name,
+            phoneNumber: phone,
+            maxScan: invites,
         };
 
-        const updatedGuests = [...guests, newGuest];
-        setGuests(updatedGuests);
-        localStorage.setItem("guests", JSON.stringify(updatedGuests));
-
-        setName("");
-        setPhone("");
-        setInvites("");
+        try {
+            const response = await fetch("https://www.izemak.com/azimak/public/api/addinvitor", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(newGuest),
+            });
+            if (!response.ok) {
+                throw new Error("Failed to save guest");
+            }
+            setName("");
+            setPhone("");
+            setInvites("");
+            currentParty.members.push(newGuest);
+            setGuests(currentParty.members);
+        } catch (error) {
+            console.error("Error saving guest:", error);
+        }
     };
 
     return (
@@ -42,12 +53,8 @@ const currentParty = location.state?.party;
                     ) : (
                         guests.map((guest) => (
                             <li key={guest.id}>
-                                <span>
-                                    {guest.name}  
-                                </span>
-                                <span>
-                                    {guest.status}
-                                </span>
+                                <span>{guest.name}</span>
+                                <span>{guest.status}</span>
                             </li>
                         ))
                     )}
