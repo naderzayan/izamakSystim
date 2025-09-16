@@ -69,23 +69,39 @@
       border: 1px solid #7A6B88;
       border-radius: 5px;
       width: 500px;
+      height: 2.5em;
     }
 
-    .addButton {
+    .buttons {
       display: flex;
+      justify-content: center;
+      gap: 1em;
+    }
+    .inputUpload {
+      background: #7A6B88;
+      color: #fff;
+      border: none;
+      padding: 0.5em 1em;
+      border-radius: .5em;
+      width: 300px;
+      font-size: large;
+      font-weight: bold;
+      cursor: pointer;
+
     }
 
     button {
       background: #7A6B88;
       color: #fff;
       border: none;
-      padding: 0.5rem 1rem;
-      border-radius: 5px;
-      width: 200px;
+      padding: 0.5em 1em;
+      border-radius: .5em;
+      width: 300px;
+      height: 2.5em;
       font-size: large;
       font-weight: bold;
       cursor: pointer;
-      margin-right: 0.5rem;
+      margin-right: 0.5em;
 
       &:hover {
         background: #dbcce9;
