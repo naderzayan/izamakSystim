@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../style/_createNewParty.scss";
-import { FaCloudUploadAlt } from "react-icons/fa";
 
 export default function CreateNewParty() {
     const navigate = useNavigate();
@@ -90,7 +89,7 @@ export default function CreateNewParty() {
                     </div>
 
                     <div className="dataOfNewParty">
-                        <input type="file" onChange={(e) => setFile(e.target.files[0])} />
+                        <input type="file" onChange={(e) => setFile(e.target.files[0])} className="inputUpload" />
                     </div>
 
                     <div className="dataOfNewParty">
