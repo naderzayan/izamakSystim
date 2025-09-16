@@ -58,6 +58,17 @@
       color: #000;
     }
   }
+  .inputUpload {
+      background: #7A6B88;
+      color: #fff;
+      border: none;
+      padding: 0.5em 1em;
+      border-radius: .5em;
+      width: 300px;
+      font-size: large;
+      font-weight: bold;
+      cursor: pointer;
+  }
 }
 .loadingOverlay {
   position: fixed;
