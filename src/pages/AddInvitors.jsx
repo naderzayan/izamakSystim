@@ -1,45 +1,82 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import "../style/_addInvitors.scss";
 import { useLocation } from "react-router-dom";
+
 export default function AddInvitors() {
+    const location = useLocation();
+    // const navigate = useNavigate();
     const [guests, setGuests] = useState([]);
     const [name, setName] = useState("");
     const [phone, setPhone] = useState("");
     const [invites, setInvites] = useState("");
-    const location = useLocation();
+    const [loading, setLoading] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState(null);
     const currentParty = location.state?.party;
+    const query = useMemo(() => new URLSearchParams(location.search), [location.search]);
+    const partyId = currentParty?.id ?? query.get("partyId");
+
     useEffect(() => {
-        setGuests(currentParty.members);
-    }, []);
+        if (!partyId) return;
 
-    const handleAddGuest = async () => {
-        if (!name || !phone || !invites) return;
-
-        const newGuest = {
-            Party_id: currentParty.id,
-            name: name,
-            phoneNumber: phone,
-            maxScan: invites,
+        let cancelled = false;
+        const fetchGuests = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const res = await fetch(`https://www.izemak.com/azimak/public/api/inviters/${partyId}`);
+                if (!res.ok) throw new Error("فشل في جلب المدعوين من السيرفر");
+                const data = await res.json();
+                const arr = Array.isArray(data) ? data : data?.data ?? data?.invitors ?? data?.members ?? [];
+                if (!cancelled) setGuests(arr);
+                console.log("Fetched guests:", arr);
+            } catch (err) {
+                console.error(err);
+                if (!cancelled) setError(err.message || "حدث خطأ");
+            } finally {
+                if (!cancelled) setLoading(false);
+            }
         };
 
+        fetchGuests();
+        return () => {
+            cancelled = true;
+        };
+    }, [partyId]);
+
+    const handleAddGuest = async () => {
+        if (!partyId) {
+            alert("مفيش رقم الحفلة. افتح الصفحة من صفحة الحفلات أو مرر ?partyId=ID");
+            return;
+        }
+        if (!name || !phone || !invites) return;
+
+        setSaving(true);
+        setError(null);
         try {
-            const response = await fetch("https://www.izemak.com/azimak/public/api/addinvitor", {
+            const formData = new FormData();
+            formData.append("Party_id", partyId);
+            formData.append("name", name);
+            formData.append("phoneNumber", phone);
+            formData.append("maxScan", invites);
+
+            const res = await fetch("https://www.izemak.com/azimak/public/api/addinvitor", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(newGuest),
+                body: formData,
             });
-            if (!response.ok) {
-                throw new Error("Failed to save guest");
-            }
+
+            if (!res.ok) throw new Error("فشل في إضافة المدعو على السيرفر");
+            const data = await res.json();
+            const created = Array.isArray(data) ? data[0] : data?.data ?? data;
+            setGuests((prev) => [...prev, created]);
             setName("");
             setPhone("");
             setInvites("");
-            currentParty.members.push(newGuest);
-            setGuests(currentParty.members);
-        } catch (error) {
-            console.error("Error saving guest:", error);
+        } catch (err) {
+            console.error(err);
+            setError(err.message || "حدث خطأ أثناء الإضافة");
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -47,14 +84,15 @@ export default function AddInvitors() {
         <main className="mainOfAddInvitors">
             <div className="sideBar">
                 <h1>قائمة المدعوين</h1>
+                {loading ? <p>Loading...</p> : null}
                 <ul>
-                    {guests.length === 0 ? (
-                        <p>لا يوجد مدعوون بعد</p>
+                    {!Array.isArray(guests) || guests.length === 0 ? (
+                        <p>No Data Yet</p>
                     ) : (
-                        guests.map((guest) => (
-                            <li key={guest.id}>
+                        guests.map((guest, idx) => (
+                            <li key={guest.id ?? idx}>
                                 <span>{guest.name}</span>
-                                <span>{guest.status}</span>
+                                <span>{guest.status ?? ""}</span>
                             </li>
                         ))
                     )}
@@ -62,6 +100,7 @@ export default function AddInvitors() {
             </div>
 
             <div className="addDetailis">
+                {error && <p className="error">{error}</p>}
                 <h2>أدخل بيانات المدعو</h2>
 
                 <div className="name">
@@ -71,7 +110,7 @@ export default function AddInvitors() {
 
                 <div className="phoneNum">
                     <label>رقم الهاتف</label>
-                    <input type="number" placeholder="رقم الهاتف" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                    <input type="text" placeholder="رقم الهاتف" value={phone} onChange={(e) => setPhone(e.target.value)} />
                 </div>
 
                 <div className="numOfInvitations">
@@ -79,8 +118,15 @@ export default function AddInvitors() {
                     <input type="number" placeholder="عدد الدعوات" value={invites} onChange={(e) => setInvites(e.target.value)} />
                 </div>
 
-                <div className="addButton">
-                    <button onClick={handleAddGuest}>إضافة</button>
+                <div className="buttons">
+                    <div className="addButton">
+                        <button type="button" onClick={handleAddGuest} disabled={saving}>
+                            {saving ? "جاري الإضافة..." : "إضافة"}
+                        </button>
+                    </div>
+                    <div className="addButton">
+                        <input type="file" name="" id="" className="inputUpload"/>
+                    </div>
                 </div>
             </div>
         </main>
