@@ -25,14 +25,13 @@ export default function AddInvitors() {
             setError(null);
             try {
                 const res = await fetch(`https://www.izemak.com/azimak/public/api/inviters/${partyId}`);
-                if (!res.ok) throw new Error("فشل في جلب المدعوين من السيرفر");
+                if (!res.ok) throw new Error("No Data Added");
                 const data = await res.json();
                 const arr = Array.isArray(data) ? data : data?.data ?? data?.invitors ?? data?.members ?? [];
                 if (!cancelled) setGuests(arr);
                 console.log("Fetched guests:", arr);
             } catch (err) {
-                console.error(err);
-                if (!cancelled) setError(err.message || "حدث خطأ");
+                if (!cancelled) setError(err.message || "error");
             } finally {
                 if (!cancelled) setLoading(false);
             }
@@ -46,7 +45,7 @@ export default function AddInvitors() {
 
     const handleAddGuest = async () => {
         if (!partyId) {
-            alert("مفيش رقم الحفلة. افتح الصفحة من صفحة الحفلات أو مرر ?partyId=ID");
+            alert("error ?partyId=ID");
             return;
         }
         if (!name || !phone || !invites) return;
@@ -65,7 +64,7 @@ export default function AddInvitors() {
                 body: formData,
             });
 
-            if (!res.ok) throw new Error("فشل في إضافة المدعو على السيرفر");
+            if (!res.ok) throw new Error("error not added");
             const data = await res.json();
             const created = Array.isArray(data) ? data[0] : data?.data ?? data;
             setGuests((prev) => [...prev, created]);
@@ -73,8 +72,7 @@ export default function AddInvitors() {
             setPhone("");
             setInvites("");
         } catch (err) {
-            console.error(err);
-            setError(err.message || "حدث خطأ أثناء الإضافة");
+            setError(err.message || "error");
         } finally {
             setSaving(false);
         }
@@ -121,7 +119,7 @@ export default function AddInvitors() {
                 <div className="buttons">
                     <div className="addButton">
                         <button type="button" onClick={handleAddGuest} disabled={saving}>
-                            {saving ? "جاري الإضافة..." : "إضافة"}
+                            {saving ? "Loading..." : "إضافة"}
                         </button>
                     </div>
                     <div className="addButton">
