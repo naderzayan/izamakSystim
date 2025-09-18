@@ -6,19 +6,36 @@ import { MdDelete } from "react-icons/md";
 
 export default function MainPartyData() {
     const [parties, setParties] = useState([]);
-    const [filteredParties, setFilteredParties] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [searchPerformed, setSearchPerformed] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
+    const [lastPage, setLastPage] = useState(1);
     const [showModal, setShowModal] = useState(false);
     const [deleteIndex, setDeleteIndex] = useState(null);
-    const itemsPerPage = 10;
+    const [loading, setLoading] = useState(false);
+
+    const baseUrl = "https://www.izemak.com/azimak/public/api/parties";
+
+    const fetchParties = (page = 1) => {
+        setLoading(true);
+        fetch(`${baseUrl}?page=${page}`, {
+            headers: { Accept: "application/json" },
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                setParties(data.data);
+                setLastPage(data.meta?.last_page || 1);
+                setLoading(false);
+            })
+            .catch((error) => {
+                console.error("Fetch error:", error);
+                setLoading(false);
+            });
+    };
 
     useEffect(() => {
-        const storedParties = JSON.parse(localStorage.getItem("parties")) || [];
-        setParties(storedParties);
-        setFilteredParties(storedParties);
-    }, []);
+        fetchParties(currentPage);
+    }, [currentPage]);
 
     const confirmDelete = (index) => {
         setDeleteIndex(index);
@@ -27,39 +44,37 @@ export default function MainPartyData() {
 
     const handleDelete = () => {
         if (deleteIndex === null) return;
+        const deleteUrl = "https://www.izemak.com/azimak/public/api/deleteparty/" + parties[deleteIndex].id;
+        fetch(deleteUrl, {
+            method: "DELETE",
+            headers: { Accept: "application/json" },
+        });
 
         const updatedParties = parties.filter((_, i) => i !== deleteIndex);
         setParties(updatedParties);
-
-        const updatedFiltered = filteredParties.filter((_, i) => i !== deleteIndex);
-        setFilteredParties(updatedFiltered);
-
-        localStorage.setItem("parties", JSON.stringify(updatedParties));
         setShowModal(false);
         setDeleteIndex(null);
     };
 
     const handleSearch = () => {
         setSearchPerformed(true);
+        if (!searchTerm) {
+            fetchParties(currentPage);
+            return;
+        }
         const result = parties.filter((party) => party.name.toLowerCase().includes(searchTerm.toLowerCase()));
-        setFilteredParties(result);
-        setCurrentPage(1);
+        setParties(result);
     };
 
-    const totalPages = Math.ceil(filteredParties.length / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const currentParties = filteredParties.slice(startIndex, endIndex);
-
     const goToNextPage = () => {
-        if (currentPage < totalPages) {
-            setCurrentPage(currentPage + 1);
+        if (currentPage < lastPage) {
+            setCurrentPage((prev) => prev + 1);
         }
     };
 
     const goToPrevPage = () => {
         if (currentPage > 1) {
-            setCurrentPage(currentPage - 1);
+            setCurrentPage((prev) => prev - 1);
         }
     };
 
@@ -80,61 +95,70 @@ export default function MainPartyData() {
                 </div>
             </div>
 
-            <table className="partyTable">
-                <thead>
-                    <tr>
-                        <th>اسم الحفلة</th>
-                        <th>ميعاد الحفلة</th>
-                        <th>عنوان الحفلة</th>
-                        <th>تعديل وحذف</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {currentParties.length > 0 ? (
-                        currentParties.map((party, index) => (
-                            <tr key={startIndex + index}>
-                                <td>{party.name}</td>
-                                <td>{party.date}</td>
-                                <td>{party.place}</td>
-                                <td>
-                                    <button className="editBtn">
-                                        <Link to="/AddInvitors">
-                                            <BsDatabaseAdd />
-                                        </Link>
-                                    </button>
-                                    <button className="deleteBtn" onClick={() => confirmDelete(startIndex + index)}>
-                                        <MdDelete />
-                                    </button>
-                                </td>
+            {loading ? (
+                <div className="loadingSpinner">
+                    <div className="spinner"></div>
+                    <p>جاري تحميل البيانات...</p>
+                </div>
+            ) : (
+                <>
+                    <table className="partyTable">
+                        <thead>
+                            <tr>
+                                <th>اسم الحفلة</th>
+                                <th>ميعاد الحفلة</th>
+                                <th>عنوان الحفلة</th>
+                                <th>اضافة مدعويين وحذف الحفلة</th>
                             </tr>
-                        ))
-                    ) : searchPerformed ? (
-                        <tr>
-                            <td colSpan="4" className="empty">
-                                لا توجد نتائج مطابقة
-                            </td>
-                        </tr>
-                    ) : (
-                        <tr>
-                            <td colSpan="4" className="empty">
-                                لا يوجد بيانات بالجدول
-                            </td>
-                        </tr>
-                    )}
-                </tbody>
-            </table>
+                        </thead>
+                        <tbody>
+                            {parties.length > 0 ? (
+                                parties.map((party, index) => (
+                                    <tr key={index}>
+                                        <td>{party.name}</td>
+                                        <td>{party.time}</td>
+                                        <td>{party.address}</td>
+                                        <td>
+                                            <button className="editBtn">
+                                                <Link to="/AddInvitors" state={{ party }}>
+                                                    <BsDatabaseAdd />
+                                                </Link>
+                                            </button>
+                                            <button className="deleteBtn" onClick={() => confirmDelete(index)}>
+                                                <MdDelete />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : searchPerformed ? (
+                                <tr>
+                                    <td colSpan="4" className="empty">
+                                        لا توجد نتائج مطابقة
+                                    </td>
+                                </tr>
+                            ) : (
+                                <tr>
+                                    <td colSpan="4" className="empty">
+                                        لا يوجد بيانات بالجدول
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
 
-            <div className="pages">
-                <button className="prev" onClick={goToPrevPage} disabled={currentPage === 1}>
-                    السابقة
-                </button>
-                <span>
-                    {currentPage} / {totalPages || 1}
-                </span>
-                <button className="next" onClick={goToNextPage} disabled={currentPage === totalPages || totalPages === 0}>
-                    التالية
-                </button>
-            </div>
+                    <div className="pages">
+                        <button className="prev" onClick={goToPrevPage} disabled={currentPage === 1}>
+                            السابقة
+                        </button>
+                        <span>
+                            {currentPage} / {lastPage}
+                        </span>
+                        <button className="next" onClick={goToNextPage} disabled={currentPage === lastPage}>
+                            التالية
+                        </button>
+                    </div>
+                </>
+            )}
 
             {showModal && (
                 <div className="modalOverlay">

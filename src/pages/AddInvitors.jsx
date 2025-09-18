@@ -1,76 +1,96 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import "../style/_addInvitors.scss";
-import { TiDeleteOutline } from "react-icons/ti";
-import { MdDeleteForever } from "react-icons/md";
+import { useLocation } from "react-router-dom";
 
 export default function AddInvitors() {
+    const location = useLocation();
+    // const navigate = useNavigate();
     const [guests, setGuests] = useState([]);
     const [name, setName] = useState("");
     const [phone, setPhone] = useState("");
     const [invites, setInvites] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState(null);
+    const currentParty = location.state?.party;
+    const query = useMemo(() => new URLSearchParams(location.search), [location.search]);
+    const partyId = currentParty?.id ?? query.get("partyId");
 
     useEffect(() => {
-        const storedGuests = JSON.parse(localStorage.getItem("guests")) || [];
-        setGuests(storedGuests);
-    }, []);
+        if (!partyId) return;
 
-    const handleAddGuest = () => {
-        if (!name || !phone || !invites) return;
-
-        const newGuest = {
-            id: Date.now(),
-            name,
-            phone,
-            invites,
-            status: "invited",
+        let cancelled = false;
+        const fetchGuests = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const res = await fetch(`https://www.izemak.com/azimak/public/api/inviters/${partyId}`);
+                if (!res.ok) throw new Error("No Data Added");
+                const data = await res.json();
+                const arr = Array.isArray(data) ? data : data?.data ?? data?.invitors ?? data?.members ?? [];
+                if (!cancelled) setGuests(arr);
+                console.log("Fetched guests:", arr);
+            } catch (err) {
+                if (!cancelled) setError(err.message || "error");
+            } finally {
+                if (!cancelled) setLoading(false);
+            }
         };
 
-        const updatedGuests = [...guests, newGuest];
-        setGuests(updatedGuests);
-        localStorage.setItem("guests", JSON.stringify(updatedGuests));
+        fetchGuests();
+        return () => {
+            cancelled = true;
+        };
+    }, [partyId]);
 
-        setName("");
-        setPhone("");
-        setInvites("");
+    const handleAddGuest = async () => {
+        if (!partyId) {
+            alert("error ?partyId=ID");
+            return;
+        }
+        if (!name || !phone || !invites) return;
+
+        setSaving(true);
+        setError(null);
+        try {
+            const formData = new FormData();
+            formData.append("Party_id", partyId);
+            formData.append("name", name);
+            formData.append("phoneNumber", phone);
+            formData.append("maxScan", invites);
+
+            const res = await fetch("https://www.izemak.com/azimak/public/api/addinvitor", {
+                method: "POST",
+                body: formData,
+            });
+
+            if (!res.ok) throw new Error("error not added");
+            const data = await res.json();
+            const created = Array.isArray(data) ? data[0] : data?.data ?? data;
+            setGuests((prev) => [...prev, created]);
+            setName("");
+            setPhone("");
+            setInvites("");
+        } catch (err) {
+            setError(err.message || "error");
+        } finally {
+            setSaving(false);
+        }
     };
-
-    // حذف مدعو واحد
-    // const handleDeleteGuest = (id) => {
-    //     const updatedGuests = guests.filter((guest) => guest.id !== id);
-    //     setGuests(updatedGuests);
-    //     localStorage.setItem("guests", JSON.stringify(updatedGuests));
-    // };
-
-    // مسح كل المدعوين
-    // const handleClearAll = () => {
-    //     setGuests([]);
-    //     localStorage.removeItem("guests");
-    // };
 
     return (
         <main className="mainOfAddInvitors">
             <div className="sideBar">
                 <h1>قائمة المدعوين</h1>
-                {/* {guests.length > 0 && (
-                    <button className="clearAllBtn" onClick={handleClearAll}>
-                        مسح الكل <TiDeleteOutline />
-                    </button>
-                )} */}
+                {loading ? <p>Loading...</p> : null}
                 <ul>
-                    {guests.length === 0 ? (
-                        <p>لا يوجد مدعوون بعد</p>
+                    {!Array.isArray(guests) || guests.length === 0 ? (
+                        <p>No Data Yet</p>
                     ) : (
-                        guests.map((guest) => (
-                            <li key={guest.id}>
-                                <span>
-                                   - {guest.name}  
-                                </span>
-                                <span>
-                                    {guest.status}
-                                </span>
-                                {/* <button className="deleteBtn" onClick={() => handleDeleteGuest(guest.id)}>
-                                    <MdDeleteForever />
-                                </button> */}
+                        guests.map((guest, idx) => (
+                            <li key={guest.id ?? idx}>
+                                <span>{guest.name}</span>
+                                <span>{guest.status ?? ""}</span>
                             </li>
                         ))
                     )}
@@ -78,6 +98,7 @@ export default function AddInvitors() {
             </div>
 
             <div className="addDetailis">
+                {error && <p className="error">{error}</p>}
                 <h2>أدخل بيانات المدعو</h2>
 
                 <div className="name">
@@ -87,7 +108,7 @@ export default function AddInvitors() {
 
                 <div className="phoneNum">
                     <label>رقم الهاتف</label>
-                    <input type="number" placeholder="رقم الهاتف" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                    <input type="text" placeholder="رقم الهاتف" value={phone} onChange={(e) => setPhone(e.target.value)} />
                 </div>
 
                 <div className="numOfInvitations">
@@ -95,8 +116,15 @@ export default function AddInvitors() {
                     <input type="number" placeholder="عدد الدعوات" value={invites} onChange={(e) => setInvites(e.target.value)} />
                 </div>
 
-                <div className="addButton">
-                    <button onClick={handleAddGuest}>إضافة</button>
+                <div className="buttons">
+                    <div className="addButton">
+                        <button type="button" onClick={handleAddGuest} disabled={saving}>
+                            {saving ? "Loading..." : "إضافة"}
+                        </button>
+                    </div>
+                    <div className="addButton">
+                        <input type="file" name="" id="" className="inputUpload"/>
+                    </div>
                 </div>
             </div>
         </main>

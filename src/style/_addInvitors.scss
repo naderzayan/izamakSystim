@@ -15,50 +15,39 @@
   }
 
   .sideBar {
-    background: #7A6B88;
-    color: #fff;
-    width: 25%;
-    padding: 1rem;
+  background: #7A6B88;
+  color: #fff;
+  width: 25%;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
 
-    .clearAllBtn {
-      background: none;
-      border: none;
-      color: #fff;
-      padding: 1em;
-      font-size: 20px;
-      
-      svg {
-        font-size: 20px;
-      }
-    }
+  h1 {
+    text-align: center;
+    margin-bottom: 1rem;
+  }
 
-    h1 {
-      text-align: center;
-      margin-bottom: 1rem;
-    }
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    padding-inline-end: 10px;
+    flex: 1;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
 
-    ul {
-      list-style: none;
-      padding: 0;
-
-      li {
-        background: #dbcce9;
-        margin-bottom: 0.5rem;
-        padding: 0.5rem;
-        border-radius: 5px;
-        display: flex;
-        justify-content: space-between;
-        color: #000;
-      }
-      .deleteBtn {
-        background: none;
-        border: none;
-        svg {
-          font-size: 25px;
-        }
-      }
+    li {
+      background: #dbcce9;
+      margin-bottom: 0.5rem;
+      padding: 0.5rem;
+      border-radius: 5px;
+      display: flex;
+      justify-content: space-between;
+      color: #000;
     }
   }
+}
+
 
   .addDetailis {
     flex: 1;
@@ -80,23 +69,38 @@
       border: 1px solid #7A6B88;
       border-radius: 5px;
       width: 500px;
+      height: 2.5em;
     }
 
-    .addButton {
+    .buttons {
       display: flex;
+      justify-content: center;
+      gap: 1em;
+    }
+    .inputUpload {
+      background: #7A6B88;
+      color: #fff;
+      border: none;
+      padding: 0.5em 1em;
+      border-radius: .5em;
+      width: 300px;
+      font-size: large;
+      font-weight: bold;
+      cursor: pointer;
     }
 
     button {
       background: #7A6B88;
       color: #fff;
       border: none;
-      padding: 0.5rem 1rem;
-      border-radius: 5px;
-      width: 200px;
+      padding: 0.5em 1em;
+      border-radius: .5em;
+      width: 300px;
+      height: 2.5em;
       font-size: large;
       font-weight: bold;
       cursor: pointer;
-      margin-right: 0.5rem;
+      margin-right: 0.5em;
 
       &:hover {
         background: #dbcce9;
